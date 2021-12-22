@@ -15,9 +15,12 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import be.seeseemelk.mockbukkit.MockBukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -39,6 +42,18 @@ class TestSlimefunSpelling {
     @ParametersAreNonnullByDefault
     @MethodSource("getAllLanguageFiles")
     @DisplayName("Test correct spelling of Slimefun in language files")
+
+    @BeforeAll
+    public static void load() {
+        MockBukkit.mock();
+    }
+
+    @AfterAll
+    public static void unload() {
+        MockBukkit.unmock();
+    }
+
+
     void testSpelling(LanguagePreset lang, LanguageFile file) throws IOException {
         String path = file.getFilePath(lang.getLanguageCode());
         InputStream inputStream = getClass().getResourceAsStream(path);

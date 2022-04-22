@@ -14,7 +14,7 @@ import org.bukkit.entity.Player;
  * @author TheBusyBiscuit
  *
  */
-class ElevatorFloor {
+public class ElevatorFloor {
 
     /**
      * The name of this floor.

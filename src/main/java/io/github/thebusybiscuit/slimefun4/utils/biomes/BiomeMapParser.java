@@ -33,7 +33,7 @@ import io.github.thebusybiscuit.slimefun4.utils.PatternUtils;
  * 
  * @see BiomeMap
  */
-class BiomeMapParser<T> {
+public class BiomeMapParser<T> {
 
     private static final String VALUE_KEY = "value";
     private static final String BIOMES_KEY = "biomes";
@@ -98,7 +98,7 @@ class BiomeMapParser<T> {
 
     void read(@Nonnull String json) throws BiomeMapException {
         Validate.notNull(json, "The JSON string should not be null!");
-        JsonArray root = null;
+        JsonArray root;
 
         try {
             root = JsonUtils.parseString(json).getAsJsonArray();
@@ -120,7 +120,7 @@ class BiomeMapParser<T> {
             if (element instanceof JsonObject) {
                 readEntry(element.getAsJsonObject());
             } else {
-                throw new BiomeMapException(key, "Unexpected array element: " + element.getClass().getSimpleName() + " - " + element.toString());
+                throw new BiomeMapException(key, "Unexpected array element: " + element.getClass().getSimpleName() + " - " + element);
             }
         }
     }
@@ -184,7 +184,7 @@ class BiomeMapParser<T> {
                     throw new BiomeMapException(key, "Could not recognize value '" + value + "'");
                 }
             } else {
-                throw new BiomeMapException(key, "Unexpected array element: " + element.getClass().getSimpleName() + " - " + element.toString());
+                throw new BiomeMapException(key, "Unexpected array element: " + element.getClass().getSimpleName() + " - " + element);
             }
         }
 

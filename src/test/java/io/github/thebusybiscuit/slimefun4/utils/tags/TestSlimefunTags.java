@@ -131,8 +131,8 @@ class TestSlimefunTags {
         Set<SlimefunTag> visited = new HashSet<>();
 
         if (isCyclic(visiting, visited, tag)) {
-            System.out.println("Currently visiting: " + visiting);
-            System.out.println("Previously visited" + visiting);
+            // System.out.println("Currently visiting: " + visiting);
+            // System.out.println("Previously visited" + visiting);
             Assertions.fail("Tag '" + tag.getKey() + "' is cyclic!");
         }
     }

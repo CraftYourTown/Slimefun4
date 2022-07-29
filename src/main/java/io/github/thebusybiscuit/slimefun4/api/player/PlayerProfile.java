@@ -192,7 +192,6 @@ public class PlayerProfile {
      * 
      * @param research
      *            The {@link Research} that is being queried
-     * 
      * @return Whether this {@link Research} has been unlocked
      */
     public boolean hasUnlocked(@Nullable Research research) {
@@ -202,23 +201,6 @@ public class PlayerProfile {
         }
 
         return !research.isEnabled() || researches.contains(research);
-    }
-
-    /**
-     * This method returns whether this {@link Player} has unlocked all {@link Research Researches}.
-     * 
-     * @return Whether they unlocked every {@link Research}
-     */
-    public boolean hasUnlockedEverything() {
-        for (Research research : Slimefun.getRegistry().getResearches()) {
-            // If there is a single Research not unlocked: They haven't unlocked everything.
-            if (!hasUnlocked(research)) {
-                return false;
-            }
-        }
-
-        // Player has everything unlocked - Hooray!
-        return true;
     }
 
     /**
@@ -487,9 +469,7 @@ public class PlayerProfile {
 
             if (!armorPiece.isPresent()) {
                 setId = null;
-            } else if (armorPiece.get() instanceof ProtectiveArmor) {
-                ProtectiveArmor protectedArmor = (ProtectiveArmor) armorPiece.get();
-
+            } else if (armorPiece.get() instanceof ProtectiveArmor protectedArmor) {
                 if (setId == null && protectedArmor.isFullSetRequired()) {
                     setId = protectedArmor.getArmorSetId();
                 }
@@ -517,7 +497,7 @@ public class PlayerProfile {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof PlayerProfile && uuid.equals(((PlayerProfile) obj).uuid);
+        return obj instanceof PlayerProfile profile && uuid.equals(profile.uuid);
     }
 
     @Override

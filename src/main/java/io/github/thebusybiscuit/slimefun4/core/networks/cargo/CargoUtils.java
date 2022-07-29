@@ -1,10 +1,12 @@
 package io.github.thebusybiscuit.slimefun4.core.networks.cargo;
 
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Tag;
@@ -70,21 +72,20 @@ final class CargoUtils {
 
         Material type = block.getType();
 
-        switch (type) {
-            case CHEST:
-            case TRAPPED_CHEST:
-            case FURNACE:
-            case DISPENSER:
-            case DROPPER:
-            case HOPPER:
-            case BREWING_STAND:
-            case BARREL:
-            case BLAST_FURNACE:
-            case SMOKER:
-                return true;
-            default:
-                return SlimefunTag.SHULKER_BOXES.isTagged(type);
-        }
+        // TODO: Add designated SlimefunTag
+        return switch (type) {
+            case CHEST,
+                TRAPPED_CHEST,
+                FURNACE,
+                DISPENSER,
+                DROPPER,
+                HOPPER,
+                BREWING_STAND,
+                BARREL,
+                BLAST_FURNACE,
+                SMOKER -> true;
+            default -> SlimefunTag.SHULKER_BOXES.isTagged(type);
+        };
     }
 
     @Nonnull
@@ -145,8 +146,8 @@ final class CargoUtils {
 
                 BlockState state = PaperLib.getBlockState(target, false).getState();
 
-                if (state instanceof InventoryHolder) {
-                    inventory = ((InventoryHolder) state).getInventory();
+                if (state instanceof InventoryHolder inventoryHolder) {
+                    inventory = inventoryHolder.getInventory();
                     inventories.put(target.getLocation(), inventory);
                     return withdrawFromVanillaInventory(network, node, template, inventory);
                 }
@@ -230,8 +231,8 @@ final class CargoUtils {
 
             BlockState state = PaperLib.getBlockState(target, false).getState();
 
-            if (state instanceof InventoryHolder) {
-                inventory = ((InventoryHolder) state).getInventory();
+            if (state instanceof InventoryHolder inventoryHolder) {
+                inventory = inventoryHolder.getInventory();
                 inventories.put(target.getLocation(), inventory);
                 return withdrawFromVanillaInventory(network, node, inventory);
             }
@@ -260,8 +261,8 @@ final class CargoUtils {
     }
 
     @Nullable
-    static ItemStack insert(AbstractItemNetwork network, Map<Location, Inventory> inventories, Block node, Block target, boolean smartFill, ItemStack stack, ItemStackWrapper wrapper) {
-        Debug.log(TestCase.CARGO_INPUT_TESTING, "CargoUtils#insert");
+    static ItemStack insert(AbstractItemNetwork network, Map<Location, Inventory> inventories, Block node, Block target, boolean smartFill, ItemStack stack) {
+        // Debug.log(TestCase.CARGO_INPUT_TESTING, "CargoUtils#insert");
         if (!matchesFilter(network, node, stack)) {
             return stack;
         }
@@ -273,22 +274,22 @@ final class CargoUtils {
                 Inventory inventory = inventories.get(target.getLocation());
 
                 if (inventory != null) {
-                    return insertIntoVanillaInventory(stack, wrapper, smartFill, inventory);
+                    return insertIntoVanillaInventory(stack, smartFill, inventory);
                 }
 
                 BlockState state = PaperLib.getBlockState(target, false).getState();
 
-                if (state instanceof InventoryHolder) {
-                    inventory = ((InventoryHolder) state).getInventory();
+                if (state instanceof InventoryHolder inventoryHolder) {
+                    inventory = inventoryHolder.getInventory();
                     inventories.put(target.getLocation(), inventory);
-                    return insertIntoVanillaInventory(stack, wrapper, smartFill, inventory);
+                    return insertIntoVanillaInventory(stack, smartFill, inventory);
                 }
             }
 
             return stack;
         }
 
-        for (int slot : menu.getPreset().getSlotsAccessedByItemTransport(menu, ItemTransportFlow.INSERT, wrapper)) {
+        for (int slot : menu.getPreset().getSlotsAccessedByItemTransport(menu, ItemTransportFlow.INSERT, stack)) {
             ItemStack itemInSlot = menu.getItemInSlot(slot);
 
             if (itemInSlot == null) {
@@ -304,9 +305,10 @@ final class CargoUtils {
                 continue;
             }
 
-            if (SlimefunUtils.isItemSimilar(itemInSlot, wrapper, true, false)) {
+            if ((SlimefunItem.getByItem(stack) != null || !stack.hasItemMeta() && !itemInSlot.hasItemMeta())
+                    && ItemFilter.altItemCompare(itemInSlot, stack)) {
                 if (currentAmount < maxStackSize) {
-                    int amount = currentAmount + stack.getAmount();
+                    int amount = currentAmount + stack.getAmount(); // get total amount
 
                     itemInSlot.setAmount(Math.min(amount, maxStackSize));
                     if (amount > maxStackSize) {
@@ -327,7 +329,7 @@ final class CargoUtils {
     }
 
     @Nullable
-    private static ItemStack insertIntoVanillaInventory(@Nonnull ItemStack stack, @Nonnull ItemStackWrapper wrapper, boolean smartFill, @Nonnull Inventory inv) {
+    private static ItemStack insertIntoVanillaInventory(@Nonnull ItemStack stack, boolean smartFill, @Nonnull Inventory inv) {
         /*
          * If the Inventory does not accept this Item Type, bounce the item back.
          * Example: Shulker boxes within shulker boxes (fixes #2662)
@@ -357,7 +359,8 @@ final class CargoUtils {
                     continue;
                 }
 
-                if (SlimefunUtils.isItemSimilar(itemInSlot, wrapper, true, false)) {
+                if ((SlimefunItem.getByItem(stack) != null || !stack.hasItemMeta() && !itemInSlot.hasItemMeta())
+                        && ItemFilter.altItemCompare(itemInSlot, stack)) {
                     if (currentAmount < maxStackSize) {
                         int amount = currentAmount + stack.getAmount();
 
@@ -395,6 +398,8 @@ final class CargoUtils {
 
         return network.getItemFilter(node).test(item);
     }
+
+
 
     /**
      * This method checks if a given {@link ItemStack} is smeltable or not.

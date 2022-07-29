@@ -6,6 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import javax.annotation.Nonnull;
 
 import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -59,6 +60,13 @@ public class MobDropListener implements Listener {
                 }
             }
         }
+
+        if (e.getEntityType().equals(EntityType.WITHER)) {
+            if (e.getEntity().hasMetadata("wither-assembler")) {
+                // System.out.println("Wither assembled wither found, removing drops.");
+                e.getDrops().clear();
+            }
+        }
     }
 
     private boolean canDrop(@Nonnull Player p, @Nonnull ItemStack item) {
@@ -67,16 +75,16 @@ public class MobDropListener implements Listener {
         if (sfItem == null) {
             return true;
         } else if (sfItem.canUse(p, true)) {
-            if (sfItem instanceof RandomMobDrop) {
+            if (sfItem instanceof RandomMobDrop randomMobDrop) {
                 int random = ThreadLocalRandom.current().nextInt(100);
 
-                if (((RandomMobDrop) sfItem).getMobDropChance() <= random) {
+                if (randomMobDrop.getMobDropChance() <= random) {
                     return false;
                 }
             }
 
-            if (sfItem instanceof BasicCircuitBoard) {
-                return ((BasicCircuitBoard) sfItem).isDroppedFromGolems();
+            if (sfItem instanceof BasicCircuitBoard basicCircuitBoard) {
+                return basicCircuitBoard.isDroppedFromGolems();
             }
 
             return true;

@@ -61,7 +61,7 @@ public class BiomeMapParser<T> {
      *            A function to convert {@link JsonElement}s into your desired data type
      */
     @ParametersAreNonnullByDefault
-    public BiomeMapParser(NamespacedKey key, BiomeDataConverter<T> valueConverter) {
+    BiomeMapParser(NamespacedKey key, BiomeDataConverter<T> valueConverter) {
         Validate.notNull(key, "The key shall not be null.");
         Validate.notNull(valueConverter, "You must provide a Function to convert raw json values to your desired data type.");
 
@@ -79,7 +79,7 @@ public class BiomeMapParser<T> {
      * @param isLenient
      *            Whether this parser should be lenient or not.
      */
-    public void setLenient(boolean isLenient) {
+    void setLenient(boolean isLenient) {
         this.isLenient = isLenient;
     }
 
@@ -92,13 +92,13 @@ public class BiomeMapParser<T> {
      * 
      * @return Whether this parser is lenient or not.
      */
-    public boolean isLenient() {
+    boolean isLenient() {
         return isLenient;
     }
 
-    public void read(@Nonnull String json) throws BiomeMapException {
+    void read(@Nonnull String json) throws BiomeMapException {
         Validate.notNull(json, "The JSON string should not be null!");
-        JsonArray root = null;
+        JsonArray root;
 
         try {
             root = JsonUtils.parseString(json).getAsJsonArray();
@@ -113,14 +113,14 @@ public class BiomeMapParser<T> {
         read(root);
     }
 
-    public void read(@Nonnull JsonArray json) throws BiomeMapException {
+    void read(@Nonnull JsonArray json) throws BiomeMapException {
         Validate.notNull(json, "The JSON Array should not be null!");
 
         for (JsonElement element : json) {
             if (element instanceof JsonObject) {
                 readEntry(element.getAsJsonObject());
             } else {
-                throw new BiomeMapException(key, "Unexpected array element: " + element.getClass().getSimpleName() + " - " + element.toString());
+                throw new BiomeMapException(key, "Unexpected array element: " + element.getClass().getSimpleName() + " - " + element);
             }
         }
     }
@@ -184,7 +184,7 @@ public class BiomeMapParser<T> {
                     throw new BiomeMapException(key, "Could not recognize value '" + value + "'");
                 }
             } else {
-                throw new BiomeMapException(key, "Unexpected array element: " + element.getClass().getSimpleName() + " - " + element.toString());
+                throw new BiomeMapException(key, "Unexpected array element: " + element.getClass().getSimpleName() + " - " + element);
             }
         }
 
@@ -200,7 +200,7 @@ public class BiomeMapParser<T> {
      * @return The resulting {@link BiomeMap}
      */
     @Nonnull
-    public BiomeMap<T> buildBiomeMap() {
+    BiomeMap<T> buildBiomeMap() {
         BiomeMap<T> biomeMap = new BiomeMap<>(key);
         biomeMap.putAll(map);
         return biomeMap;

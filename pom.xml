@@ -115,7 +115,7 @@
                 <!-- Compiler plugin -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.9.0</version>
+                <version>3.10.1</version>
 
                 <configuration>
                     <excludes>
@@ -165,7 +165,7 @@
                 <!-- Code Coverage Reports -->
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.7</version>
+                <version>0.8.8</version>
 
                 <executions>
                     <execution>
@@ -235,7 +235,7 @@
                 <!-- Javadocs -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>3.4.0</version>
 
                 <configuration>
                     <reportOutputDirectory>${project.basedir}</reportOutputDirectory>
@@ -407,7 +407,7 @@
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-core</artifactId>
-            <version>7.2.8</version>
+            <version>7.2.10</version>
             <scope>provided</scope>
 
             <exclusions>
@@ -421,7 +421,7 @@
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-bukkit</artifactId>
-            <version>7.2.8</version>
+            <version>7.2.10</version>
             <scope>provided</scope>
 
             <exclusions>
@@ -491,7 +491,7 @@
         <dependency>
             <groupId>net.imprex</groupId>
             <artifactId>orebfuscator-api</artifactId>
-            <version>5.2.4</version>
+            <version>5.2.6</version>
             <scope>provided</scope>
 
             <exclusions>

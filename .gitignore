@@ -5,6 +5,8 @@
 /.settings/
 /.idea/
 /.vscode/
+/data-storage/
+/javadocs/
 
 dependency-reduced-pom.xml
 

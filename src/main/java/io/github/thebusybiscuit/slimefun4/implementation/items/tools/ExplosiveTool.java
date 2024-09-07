@@ -6,10 +6,10 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import dev.lone.itemsadder.api.CustomBlock;
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -27,6 +27,7 @@ import io.github.thebusybiscuit.slimefun4.core.attributes.DamageableItem;
 import io.github.thebusybiscuit.slimefun4.core.attributes.NotPlaceable;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
 import io.github.thebusybiscuit.slimefun4.core.handlers.ToolUseHandler;
+import io.github.thebusybiscuit.slimefun4.core.services.sounds.SoundEffect;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.implementation.items.SimpleSlimefunItem;
 import io.github.thebusybiscuit.slimefun4.utils.tags.SlimefunTag;
@@ -35,9 +36,9 @@ import me.mrCookieSlime.Slimefun.api.BlockStorage;
 
 /**
  * This {@link SlimefunItem} is a super class for items like the {@link ExplosivePickaxe} or {@link ExplosiveShovel}.
- * 
+ *
  * @author TheBusyBiscuit
- * 
+ *
  * @see ExplosivePickaxe
  * @see ExplosiveShovel
  *
@@ -64,7 +65,7 @@ public class ExplosiveTool extends SimpleSlimefunItem<ToolUseHandler> implements
                 Block b = e.getBlock();
 
                 b.getWorld().createExplosion(b.getLocation(), 0);
-                b.getWorld().playSound(b.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.2F, 1F);
+                SoundEffect.EXPLOSIVE_TOOL_EXPLODE_SOUND.playAt(b);
 
                 List<Block> blocks = findBlocks(b);
                 breakBlocks(e, p, tool, b, blocks, drops);
@@ -76,13 +77,17 @@ public class ExplosiveTool extends SimpleSlimefunItem<ToolUseHandler> implements
     private void breakBlocks(BlockBreakEvent e, Player p, ItemStack item, Block b, List<Block> blocks, List<ItemStack> drops) {
         List<Block> blocksToDestroy = new ArrayList<>();
 
-        if (callExplosionEvent.getValue().booleanValue()) {
+        if (callExplosionEvent.getValue()) {
             BlockExplodeEvent blockExplodeEvent = new BlockExplodeEvent(b, blocks, 0);
             Bukkit.getServer().getPluginManager().callEvent(blockExplodeEvent);
 
             if (!blockExplodeEvent.isCancelled()) {
                 for (Block block : blockExplodeEvent.blockList()) {
                     if (canBreak(p, block)) {
+                        if (Slimefun.getIntegrations().isCustomBlock(block)) {
+                            drops.addAll(CustomBlock.byAlreadyPlaced(block).getLoot());
+                            CustomBlock.remove(block.getLocation());
+                        }
                         blocksToDestroy.add(block);
                     }
                 }
@@ -90,6 +95,10 @@ public class ExplosiveTool extends SimpleSlimefunItem<ToolUseHandler> implements
         } else {
             for (Block block : blocks) {
                 if (canBreak(p, block)) {
+                    if (Slimefun.getIntegrations().isCustomBlock(block)) {
+                        drops.addAll(CustomBlock.byAlreadyPlaced(block).getLoot());
+                        CustomBlock.remove(block.getLocation());
+                    }
                     blocksToDestroy.add(block);
                 }
             }
@@ -136,8 +145,6 @@ public class ExplosiveTool extends SimpleSlimefunItem<ToolUseHandler> implements
         } else if (SlimefunTag.UNBREAKABLE_MATERIALS.isTagged(b.getType())) {
             return false;
         } else if (!b.getWorld().getWorldBorder().isInside(b.getLocation())) {
-            return false;
-        } else if (Slimefun.getIntegrations().isCustomBlock(b)) {
             return false;
         } else {
             return Slimefun.getProtectionManager().hasPermission(p, b.getLocation(), Interaction.BREAK_BLOCK);

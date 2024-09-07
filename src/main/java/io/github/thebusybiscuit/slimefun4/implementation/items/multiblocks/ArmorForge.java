@@ -4,8 +4,8 @@ import java.util.List;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -16,15 +16,18 @@ import org.bukkit.inventory.ItemStack;
 
 import io.github.bakedlibs.dough.items.CustomItemStack;
 import io.github.bakedlibs.dough.items.ItemUtils;
+import io.github.thebusybiscuit.slimefun4.api.events.MultiBlockCraftEvent;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
+import io.github.thebusybiscuit.slimefun4.core.services.sounds.SoundEffect;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
 import io.papermc.lib.PaperLib;
 
 public class ArmorForge extends AbstractCraftingTable {
 
+    @ParametersAreNonnullByDefault
     public ArmorForge(ItemGroup itemGroup, SlimefunItemStack item) {
         super(itemGroup, item, new ItemStack[] { null, null, null, null, new ItemStack(Material.ANVIL), null, null, new CustomItemStack(Material.DISPENSER, "Dispenser (Facing up)"), null }, BlockFace.SELF);
     }
@@ -38,19 +41,21 @@ public class ArmorForge extends AbstractCraftingTable {
             Inventory inv = dispenser.getInventory();
             List<ItemStack[]> inputs = RecipeType.getRecipeInputList(this);
 
-            for (int i = 0; i < inputs.size(); i++) {
-                if (isCraftable(inv, inputs.get(i))) {
-                    ItemStack output = RecipeType.getRecipeOutputList(this, inputs.get(i)).clone();
+            for (ItemStack[] input : inputs) {
+                if (isCraftable(inv, input)) {
+                    ItemStack output = RecipeType.getRecipeOutputList(this, input).clone();
+                    MultiBlockCraftEvent event = new MultiBlockCraftEvent(p, this, input, output);
 
-                    if (SlimefunUtils.canPlayerUseItem(p, output, true)) {
-                        craft(p, output, inv, possibleDispenser);
+                    Bukkit.getPluginManager().callEvent(event);
+                    if (!event.isCancelled() && SlimefunUtils.canPlayerUseItem(p, output, true)) {
+                        craft(p, event.getOutput(), inv, possibleDispenser);
                     }
 
                     return;
                 }
             }
 
-            if (SlimefunUtils.isInventoryEmpty(inv)) {
+            if (inv.isEmpty()) {
                 Slimefun.getLocalization().sendMessage(p, "machines.inventory-empty", true);
             } else {
                 Slimefun.getLocalization().sendMessage(p, "machines.pattern-not-found", true);
@@ -87,9 +92,9 @@ public class ArmorForge extends AbstractCraftingTable {
 
                 Slimefun.runSync(() -> {
                     if (current < 3) {
-                        p.getWorld().playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 1F, 2F);
+                        SoundEffect.ARMOR_FORGE_WORKING_SOUND.playAt(dispenser);
                     } else {
-                        p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1F, 1F);
+                        SoundEffect.ARMOR_FORGE_FINISH_SOUND.playAt(dispenser);
                         handleCraftedItem(output, dispenser, inv);
                     }
                 }, j * 20L);
@@ -99,5 +104,4 @@ public class ArmorForge extends AbstractCraftingTable {
             Slimefun.getLocalization().sendMessage(p, "machines.full-inventory", true);
         }
     }
-
 }

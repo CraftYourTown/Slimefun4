@@ -3,10 +3,11 @@ package io.github.thebusybiscuit.slimefun4.implementation.items.multiblocks;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -16,10 +17,12 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import io.github.bakedlibs.dough.items.CustomItemStack;
+import io.github.thebusybiscuit.slimefun4.api.events.MultiBlockCraftEvent;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.multiblocks.MultiBlockMachine;
+import io.github.thebusybiscuit.slimefun4.core.services.sounds.SoundEffect;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.implementation.SlimefunItems;
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
@@ -48,7 +51,7 @@ public class Compressor extends MultiBlockMachine {
     }
 
     @Override
-    public List<ItemStack> getDisplayRecipes() {
+    public @Nonnull List<ItemStack> getDisplayRecipes() {
         return recipes.stream().map(items -> items[0]).collect(Collectors.toList());
     }
 
@@ -65,13 +68,19 @@ public class Compressor extends MultiBlockMachine {
                     if (recipeInput != null && SlimefunUtils.isItemSimilar(item, recipeInput, true)) {
                         ItemStack output = RecipeType.getRecipeOutput(this, recipeInput);
                         Inventory outputInv = findOutputInventory(output, dispBlock, inv);
+                        MultiBlockCraftEvent event = new MultiBlockCraftEvent(p, this, item, output);
+
+                        Bukkit.getPluginManager().callEvent(event);
+                        if (event.isCancelled()) {
+                            return;
+                        }
 
                         if (outputInv != null) {
                             ItemStack removing = item.clone();
                             removing.setAmount(recipeInput.getAmount());
                             inv.removeItem(removing);
 
-                            craft(p, output, dispBlock, inv);
+                            craft(p, event.getOutput(), dispBlock, inv);
                         } else {
                             Slimefun.getLocalization().sendMessage(p, "machines.full-inventory", true);
                         }
@@ -92,13 +101,15 @@ public class Compressor extends MultiBlockMachine {
 
             Slimefun.runSync(() -> {
                 if (j < 3) {
-                    p.getWorld().playSound(p.getLocation(), j == 1 ? Sound.BLOCK_PISTON_CONTRACT : Sound.BLOCK_PISTON_EXTEND, 1F, j == 0 ? 1F : 2F);
-                } else {
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1F, 1F);
+                    if (j == 1) {
+                        SoundEffect.COMPRESSOR_CRAFT_CONTRACT_SOUND.playFor(p);
+                    } else {
+                        SoundEffect.COMPRESSOR_CRAFT_EXTEND_SOUND.playFor(p);
+                    }
+                 } else {
                     handleCraftedItem(output, dispenser, dispInv);
                 }
             }, i * 20L);
         }
     }
-
 }

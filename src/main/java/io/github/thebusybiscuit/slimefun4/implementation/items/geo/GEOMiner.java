@@ -11,9 +11,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import io.github.bakedlibs.dough.items.CustomItemStack;
@@ -34,12 +32,10 @@ import io.github.thebusybiscuit.slimefun4.core.machines.MachineProcessor;
 import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponentType;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.implementation.handlers.SimpleBlockBreakHandler;
-import io.github.thebusybiscuit.slimefun4.implementation.operations.MiningOperation;
+import io.github.thebusybiscuit.slimefun4.implementation.operations.GEOMiningOperation;
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 
 import me.mrCookieSlime.CSCoreLibPlugin.Configuration.Config;
-import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu.AdvancedMenuClickHandler;
-import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ClickAction;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.interfaces.InventoryBlock;
 import me.mrCookieSlime.Slimefun.Objects.handlers.BlockTicker;
 import me.mrCookieSlime.Slimefun.api.BlockStorage;
@@ -53,7 +49,7 @@ import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
  *
  * @see GEOResource
  */
-public class GEOMiner extends SlimefunItem implements RecipeDisplayItem, EnergyNetComponent, InventoryBlock, HologramOwner, MachineProcessHolder<MiningOperation> {
+public class GEOMiner extends SlimefunItem implements RecipeDisplayItem, EnergyNetComponent, InventoryBlock, HologramOwner, MachineProcessHolder<GEOMiningOperation> {
 
     private static final int[] BORDER = { 0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 26, 27, 35, 36, 44, 45, 53 };
     private static final int[] OUTPUT_BORDER = { 19, 20, 21, 22, 23, 24, 25, 28, 34, 37, 43, 46, 47, 48, 49, 50, 51, 52 };
@@ -61,7 +57,7 @@ public class GEOMiner extends SlimefunItem implements RecipeDisplayItem, EnergyN
 
     private static final int PROCESSING_TIME = 14;
 
-    private final MachineProcessor<MiningOperation> processor = new MachineProcessor<>(this);
+    private final MachineProcessor<GEOMiningOperation> processor = new MachineProcessor<>(this);
 
     private int energyConsumedPerTick = -1;
     private int energyCapacity = -1;
@@ -77,7 +73,7 @@ public class GEOMiner extends SlimefunItem implements RecipeDisplayItem, EnergyN
     }
 
     @Override
-    public MachineProcessor<MiningOperation> getMachineProcessor() {
+    public @Nonnull MachineProcessor<GEOMiningOperation> getMachineProcessor() {
         return processor;
     }
 
@@ -265,18 +261,7 @@ public class GEOMiner extends SlimefunItem implements RecipeDisplayItem, EnergyN
         preset.addItem(4, new CustomItemStack(Material.BLACK_STAINED_GLASS_PANE, " "), ChestMenuUtils.getEmptyClickHandler());
 
         for (int i : OUTPUT_SLOTS) {
-            preset.addMenuClickHandler(i, new AdvancedMenuClickHandler() {
-
-                @Override
-                public boolean onClick(Player p, int slot, ItemStack cursor, ClickAction action) {
-                    return false;
-                }
-
-                @Override
-                public boolean onClick(InventoryClickEvent e, Player p, int slot, ItemStack cursor, ClickAction action) {
-                    return cursor == null || cursor.getType() == null || cursor.getType() == Material.AIR;
-                }
-            });
+            preset.addMenuClickHandler(i, ChestMenuUtils.getDefaultOutputHandler());
         }
     }
 
@@ -298,7 +283,7 @@ public class GEOMiner extends SlimefunItem implements RecipeDisplayItem, EnergyN
 
     protected void tick(@Nonnull Block b) {
         BlockMenu inv = BlockStorage.getInventory(b);
-        MiningOperation operation = processor.getOperation(b);
+        GEOMiningOperation operation = processor.getOperation(b);
 
         if (operation != null) {
             if (!operation.isFinished()) {
@@ -339,7 +324,7 @@ public class GEOMiner extends SlimefunItem implements RecipeDisplayItem, EnergyN
                         return;
                     }
 
-                    processor.startOperation(b, new MiningOperation(resource.getItem().clone(), PROCESSING_TIME));
+                    processor.startOperation(b, new GEOMiningOperation(resource, PROCESSING_TIME));
                     Slimefun.getGPSNetwork().getResourceManager().setSupplies(resource, b.getWorld(), b.getX() >> 4, b.getZ() >> 4, supplies - 1);
                     updateHologram(b, "&7Mining: &r" + resource.getName());
                     return;

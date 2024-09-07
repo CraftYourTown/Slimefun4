@@ -1,8 +1,9 @@
 package io.github.thebusybiscuit.slimefun4.core.attributes;
 
-import org.bukkit.inventory.meta.ItemMeta;
-
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
+import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import javax.annotation.Nonnull;
 
@@ -20,12 +21,10 @@ public interface DistinctiveItem extends ItemAttribute {
      * IDs match on a DistinctiveItem and should return if the two items can stack
      * with one another.
      *
-     * @param itemMetaOne
-     *                    The {@link ItemMeta} of the first stack being compared.
-     * @param itemMetaTwo
-     *                    The {@link ItemMeta} of the second stack being compared.
+     * @param itemMetaOne The {@link ItemMeta} of the first stack being compared.
+     * @param itemMetaTwo The {@link ItemMeta} of the second stack being compared.
      *
-     * @return Whether the two {@link ItemMeta}s are distinct
+     * @return Whether the two {@link ItemMeta}s are stackable
      */
     boolean canStack(@Nonnull ItemMeta itemMetaOne, @Nonnull ItemMeta itemMetaTwo);
 }

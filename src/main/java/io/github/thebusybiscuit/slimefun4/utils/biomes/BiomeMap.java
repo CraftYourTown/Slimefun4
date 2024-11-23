@@ -31,11 +31,8 @@ import java.util.stream.Collectors;
  * The most common type is {@link Integer}, if you are using complex objects and try to read
  * your {@link BiomeMap} from a {@link JsonElement}, make sure to provide an adequate
  * {@link BiomeDataConverter} to convert the raw json data.
-<<<<<<< HEAD
-=======
  *
  * @author TheBusyBiscuit
->>>>>>> 47092df9a (Remove EnumMap and EnumSet usages (#4258))
  *
  * @param <T> The stored data type
  *
@@ -56,12 +53,8 @@ public class BiomeMap<T> implements Keyed {
     /**
      * This constructs a new {@link BiomeMap} with the given {@link NamespacedKey}.
      *
-<<<<<<< HEAD
-     * @param namespacedKey The {@link NamespacedKey} for this {@link BiomeMap}
-=======
      * @param namespacedKey
      *            The {@link NamespacedKey} for this {@link BiomeMap}
->>>>>>> 47092df9a (Remove EnumMap and EnumSet usages (#4258))
      */
     @ParametersAreNonnullByDefault
     public BiomeMap(NamespacedKey namespacedKey) {

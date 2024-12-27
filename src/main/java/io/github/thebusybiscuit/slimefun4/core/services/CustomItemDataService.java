@@ -100,11 +100,16 @@ public class CustomItemDataService implements Keyed {
      * @return An {@link Optional} describing the result
      */
     public @Nonnull Optional<String> getItemData(@Nullable ItemStack item) {
-        if (item == null || item.getType() == Material.AIR || !item.hasItemMeta()) {
+        if (item == null || item.getType() == Material.AIR) {
             return Optional.empty();
         }
 
-        return getItemData(item.getItemMeta());
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return Optional.empty();
+        }
+
+        return getItemData(meta);
     }
 
     /**

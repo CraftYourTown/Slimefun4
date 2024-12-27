@@ -9,7 +9,6 @@ import io.github.thebusybiscuit.slimefun4.api.events.SlimefunItemSpawnEvent;
 import io.github.thebusybiscuit.slimefun4.api.exceptions.PrematureCodeException;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemSpawnReason;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
-import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.core.attributes.DistinctiveItem;
 import io.github.thebusybiscuit.slimefun4.core.attributes.Radioactive;
 import io.github.thebusybiscuit.slimefun4.core.attributes.Soulbound;
@@ -244,7 +243,8 @@ public final class SlimefunUtils {
         }
 
         // Performance optimization
-        if (!(item instanceof SlimefunItemStack)) {
+        SlimefunItem slimefunItem = SlimefunItem.getByItem(item);
+        if (slimefunItem != null) {
             item = ItemStackWrapper.wrap(item);
         }
 
@@ -323,28 +323,29 @@ public final class SlimefunUtils {
             return false;
         } else if (checkAmount && item.getAmount() < sfitem.getAmount()) {
             return false;
-        } else if (sfitem instanceof SlimefunItemStack stackOne && item instanceof SlimefunItemStack stackTwo) {
-            if (stackOne.getItemId().equals(stackTwo.getItemId())) {
-                /*
-                 * PR #3417
-                 *
-                 * Some items can't rely on just IDs matching and will implement Distinctive Item
-                 * in which case we want to use the method provided to compare
-                 *
-                 * Some items can 't rely on just IDs matching and will implement {@link DistinctiveItem}
-                 * in which case we want to use the method provided to compare
-                 */
-                if (checkDistinction && stackOne instanceof DistinctiveItem distinctive && stackTwo instanceof DistinctiveItem) {
-                    return distinctive.canStack(stackOne.getItemMeta(), stackTwo.getItemMeta());
-                }
-                return true;
+        }
+        SlimefunItem sf_sfitem = SlimefunItem.getByItem(sfitem);
+        SlimefunItem sf_item = SlimefunItem.getByItem(item);
+   
+        if (sf_sfitem != null && sf_item != null) {
+            if (!sf_sfitem.getId().equals(sf_item.getId())) {
+                return false;
             }
-            return false;
+            /*
+             * PR #3417
+             *
+             * Some items can't rely on just IDs matching and will implement {@link DistinctiveItem}
+             * in which case we want to use the method provided to compare
+             */
+            if (checkDistinction && sf_sfitem instanceof DistinctiveItem distinctive && sf_item instanceof DistinctiveItem) {
+                return distinctive.canStack(sf_sfitem.getItem().getItemMeta(), sf_item.getItem().getItemMeta());
+            }
+            return true;
         } else if (item.hasItemMeta()) {
             Debug.log(TestCase.CARGO_INPUT_TESTING, "SlimefunUtils#isItemSimilar - item.hasItemMeta()");
             ItemMeta itemMeta = item.getItemMeta();
 
-            if (sfitem instanceof SlimefunItemStack) {
+            if (sf_sfitem != null) {
                 String id = Slimefun.getItemDataService().getItemData(itemMeta).orElse(null);
 
                 if (id != null) {
@@ -361,10 +362,10 @@ public final class SlimefunUtils {
                             return optionalDistinctive.get().canStack(sfItemMeta, itemMeta);
                         }
                     }
-                    return id.equals(((SlimefunItemStack) sfitem).getItemId());
+                    return id.equals((sf_sfitem.getId()));
                 }
 
-                ItemMetaSnapshot meta = ((SlimefunItemStack) sfitem).getItemMetaSnapshot();
+                ItemMeta meta = sf_sfitem.getItem().getItemMeta();
                 return equalsItemMeta(itemMeta, meta, checkLore);
             } else if (sfitem instanceof ItemStackWrapper && sfitem.hasItemMeta()) {
                 Debug.log(TestCase.CARGO_INPUT_TESTING, "  is wrapper");
@@ -471,11 +472,24 @@ public final class SlimefunUtils {
             return false;
         }
 
-        if (itemMeta instanceof PotionMeta && sfitemMeta instanceof PotionMeta) {
-            return ((PotionMeta) itemMeta).getBasePotionData().equals(((PotionMeta) sfitemMeta).getBasePotionData());
+        if (!(itemMeta instanceof PotionMeta potionMeta) || !(sfitemMeta instanceof PotionMeta sfPotionMeta)) {
+            return true;
         }
+        MinecraftVersion current = Slimefun.getMinecraftVersion();
 
-        return true;
+        if (current.isBefore(20, 2)) {
+            // getBasePotionData pre 1.20.2
+            return potionMeta.getBasePotionData().equals(sfPotionMeta.getBasePotionData());
+        } else if (current.isBefore(20, 5)) {
+            //  getBasePotionType without null check for 1.20.3 and 1.20.4
+            return potionMeta.getBasePotionType() == sfPotionMeta.getBasePotionType();
+        }
+        // check if potionMetha has a basePotionType (acting a null check for getBasePotionType
+        // on 1.20.5+
+        if (potionMeta.hasBasePotionType() != sfPotionMeta.hasBasePotionType()) {
+            return false;
+        }
+        return potionMeta.getBasePotionType() == sfPotionMeta.getBasePotionType();
     }
 
     /**

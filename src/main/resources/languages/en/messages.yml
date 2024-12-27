@@ -344,6 +344,7 @@ machines:
 
   CARGO_NODES:
     must-be-placed: '&4Must be placed onto a chest or machine!'
+    no-custom-items: '&cCustom Items are not allowed in filters!'
     connected: '&2Connected!'
     not-connected: '&4Not connected!'
 

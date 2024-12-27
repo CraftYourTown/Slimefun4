@@ -165,7 +165,6 @@ public class PlayerProfile {
      * 
      * @param research
      *            The {@link Research} that is being queried
-     * 
      * @return Whether this {@link Research} has been unlocked
      */
     public boolean hasUnlocked(@Nullable Research research) {
@@ -175,23 +174,6 @@ public class PlayerProfile {
         }
 
         return !research.isEnabled() || data.getResearches().contains(research);
-    }
-
-    /**
-     * This method returns whether this {@link Player} has unlocked all {@link Research Researches}.
-     * 
-     * @return Whether they unlocked every {@link Research}
-     */
-    public boolean hasUnlockedEverything() {
-        for (Research research : Slimefun.getRegistry().getResearches()) {
-            // If there is a single Research not unlocked: They haven't unlocked everything.
-            if (!hasUnlocked(research)) {
-                return false;
-            }
-        }
-
-        // Player has everything unlocked - Hooray!
-        return true;
     }
 
     /**

@@ -1,35 +1,5 @@
 package io.github.thebusybiscuit.slimefun4.implementation;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import io.github.thebusybiscuit.slimefun4.storage.Storage;
-import io.github.thebusybiscuit.slimefun4.storage.backend.legacy.LegacyStorage;
-
-import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
-import org.bukkit.Server;
-import org.bukkit.World;
-import org.bukkit.command.Command;
-import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
-import org.bukkit.inventory.Recipe;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
-
 import io.github.bakedlibs.dough.config.Config;
 import io.github.bakedlibs.dough.protection.ProtectionManager;
 import io.github.thebusybiscuit.slimefun4.api.MinecraftVersion;
@@ -127,12 +97,41 @@ import io.github.thebusybiscuit.slimefun4.implementation.tasks.armor.RainbowArmo
 import io.github.thebusybiscuit.slimefun4.implementation.tasks.armor.SlimefunArmorTask;
 import io.github.thebusybiscuit.slimefun4.implementation.tasks.armor.SolarHelmetTask;
 import io.github.thebusybiscuit.slimefun4.integrations.IntegrationsManager;
+import io.github.thebusybiscuit.slimefun4.storage.Storage;
+import io.github.thebusybiscuit.slimefun4.storage.backend.legacy.LegacyStorage;
 import io.github.thebusybiscuit.slimefun4.utils.NumberUtils;
 import io.github.thebusybiscuit.slimefun4.utils.tags.SlimefunTag;
 import io.papermc.lib.PaperLib;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.MenuListener;
 import me.mrCookieSlime.Slimefun.api.BlockStorage;
 import me.mrCookieSlime.Slimefun.api.inventory.UniversalBlockMenu;
+import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
+import org.bukkit.Server;
+import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
+import org.bukkit.inventory.Recipe;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.JavaPluginLoader;
+import org.bukkit.scheduler.BukkitTask;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * This is the main class of Slimefun.
@@ -215,6 +214,22 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
      */
     public Slimefun() {
         super();
+    }
+
+    /**
+     * This constructor is invoked in Unit Test environments only.
+     *
+     * @param loader      Our {@link JavaPluginLoader}
+     * @param description A {@link PluginDescriptionFile}
+     * @param dataFolder  The data folder
+     * @param file        A {@link File} for this {@link Plugin}
+     */
+    @ParametersAreNonnullByDefault
+    public Slimefun(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
+        super(loader, description, dataFolder, file);
+
+        // This is only invoked during a Unit Test
+        minecraftVersion = MinecraftVersion.UNIT_TEST;
 
         // Check that we got loaded by MockBukkit rather than Bukkit's loader
         // TODO: This is very much a hack and we can hopefully move to a more native way in the future
@@ -473,9 +488,8 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
      * Having this as a seperate method ensures the seperation between static and non-static fields.
      * It also makes sonarcloud happy :)
      * Only ever use it during {@link #onEnable()} or {@link #onDisable()}.
-     * 
-     * @param pluginInstance
-     *            Our instance of {@link Slimefun} or null
+     *
+     * @param pluginInstance Our instance of {@link Slimefun} or null
      */
     private static void setInstance(@Nullable Slimefun pluginInstance) {
         instance = pluginInstance;
@@ -483,10 +497,9 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
 
     /**
      * This returns the time it took to load Slimefun (given a starting point).
-     * 
-     * @param timestamp
-     *            The time at which we started to load Slimefun.
-     * 
+     *
+     * @param timestamp The time at which we started to load Slimefun.
+     *
      * @return The total time it took to load Slimefun (in ms or s)
      */
     private @Nonnull String getStartupTime(long timestamp) {
@@ -502,7 +515,7 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
     /**
      * This method checks if this is currently running in a unit test
      * environment.
-     * 
+     *
      * @return Whether we are inside a unit test
      */
     public boolean isUnitTest() {
@@ -563,11 +576,11 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
      * that Slimefun is compatible with (as a {@link String} representation).
      * <p>
      * Example:
-     * 
+     *
      * <pre>
      * { 1.14.x, 1.15.x, 1.16.x }
      * </pre>
-     * 
+     *
      * @return A {@link Collection} of all compatible minecraft versions as strings
      */
     static @Nonnull Collection<String> getSupportedVersions() {
@@ -737,7 +750,7 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
      * This returns the {@link Logger} instance that Slimefun uses.
      * <p>
      * <strong>Any {@link SlimefunAddon} should use their own {@link Logger} instance!</strong>
-     * 
+     *
      * @return Our {@link Logger} instance
      */
     public static @Nonnull Logger logger() {
@@ -774,7 +787,7 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
      * This returns our {@link GPSNetwork} instance.
      * The {@link GPSNetwork} is responsible for handling any GPS-related
      * operations and for managing any {@link GEOResource}.
-     * 
+     *
      * @return Our {@link GPSNetwork} instance
      */
     public static @Nonnull GPSNetwork getGPSNetwork() {
@@ -801,7 +814,7 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
      * This method returns out {@link MinecraftRecipeService} for Slimefun.
      * This service is responsible for finding/identifying {@link Recipe Recipes}
      * from vanilla Minecraft.
-     * 
+     *
      * @return Slimefun's {@link MinecraftRecipeService} instance
      */
     public static @Nonnull MinecraftRecipeService getMinecraftRecipeService() {
@@ -834,7 +847,7 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
      * That service is responsible for managing item settings per
      * {@link World}, such as disabling a {@link SlimefunItem} in a
      * specific {@link World}.
-     * 
+     *
      * @return Our instance of {@link PerWorldSettingsService}
      */
     public static @Nonnull PerWorldSettingsService getWorldSettingsService() {
@@ -845,7 +858,7 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
     /**
      * This returns our {@link HologramsService} which handles the creation and
      * cleanup of any holograms.
-     * 
+     *
      * @return Our instance of {@link HologramsService}
      */
     public static @Nonnull HologramsService getHologramsService() {
@@ -867,7 +880,7 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
     /**
      * This returns our instance of {@link IntegrationsManager}.
      * This is responsible for managing any integrations with third party {@link Plugin plugins}.
-     * 
+     *
      * @return Our instance of {@link IntegrationsManager}
      */
     public static @Nonnull IntegrationsManager getIntegrations() {
@@ -878,7 +891,7 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
     /**
      * This returns out instance of the {@link ProtectionManager}.
      * This bridge is used to hook into any third-party protection {@link Plugin}.
-     * 
+     *
      * @return Our instanceof of the {@link ProtectionManager}
      */
     public static @Nonnull ProtectionManager getProtectionManager() {
@@ -932,7 +945,7 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
     /**
      * This returns our {@link NetworkManager} which is responsible
      * for handling the Cargo and Energy networks.
-     * 
+     *
      * @return Our {@link NetworkManager} instance
      */
 
@@ -1026,15 +1039,13 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
     /**
      * This method schedules a delayed synchronous task for Slimefun.
      * <strong>For Slimefun only, not for addons.</strong>
-     * 
+     * <p>
      * This method should only be invoked by Slimefun itself.
      * Addons must schedule their own tasks using their own {@link Plugin} instance.
-     * 
-     * @param runnable
-     *            The {@link Runnable} to run
-     * @param delay
-     *            The delay for this task
-     * 
+     *
+     * @param runnable The {@link Runnable} to run
+     * @param delay    The delay for this task
+     *
      * @return The resulting {@link BukkitTask} or null if Slimefun was disabled
      */
     public static @Nullable BukkitTask runSync(@Nonnull Runnable runnable, long delay) {
@@ -1057,13 +1068,12 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
     /**
      * This method schedules a synchronous task for Slimefun.
      * <strong>For Slimefun only, not for addons.</strong>
-     * 
+     * <p>
      * This method should only be invoked by Slimefun itself.
      * Addons must schedule their own tasks using their own {@link Plugin} instance.
-     * 
-     * @param runnable
-     *            The {@link Runnable} to run
-     * 
+     *
+     * @param runnable The {@link Runnable} to run
+     *
      * @return The resulting {@link BukkitTask} or null if Slimefun was disabled
      */
     public static @Nullable BukkitTask runSync(@Nonnull Runnable runnable) {

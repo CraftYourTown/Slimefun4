@@ -54,9 +54,9 @@ class TestBeeListener {
             MockBeeProtectionSuit armor = new MockBeeProtectionSuit(itemGroup, chestplate);
             armor.register(plugin);
 
-            player.getInventory().setChestplate(chestplate.item());
+            player.getInventory().setChestplate(chestplate.clone());
             // Force update the cached armor
-            profile.getArmor()[1].update(chestplate.item(), armor);
+            profile.getArmor()[1].update(chestplate, armor);
         }
 
         double damage = 7.5;

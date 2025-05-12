@@ -16,7 +16,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
  * your {@link BiomeMap} from a {@link JsonElement}, make sure to provide an adequate
  * {@link BiomeDataConverter} to convert the raw json data.
  *
- * @author TheBusyBiscuit
- *
  * @param <T> The stored data type
  *
  * @author TheBusyBiscuit
@@ -41,9 +39,9 @@ import java.util.stream.Collectors;
 public class BiomeMap<T> implements Keyed {
 
     /**
-     * Our internal {@link HashMap} holding all the data.
+     * Our internal {@link EnumMap} holding all the data.
      */
-    private final Map<Biome, T> dataMap = new HashMap<>();
+    private final Map<Biome, T> dataMap = new EnumMap<>(Biome.class);
 
     /**
      * The {@link NamespacedKey} to identify this {@link BiomeMap}.
@@ -53,8 +51,7 @@ public class BiomeMap<T> implements Keyed {
     /**
      * This constructs a new {@link BiomeMap} with the given {@link NamespacedKey}.
      *
-     * @param namespacedKey
-     *            The {@link NamespacedKey} for this {@link BiomeMap}
+     * @param namespacedKey The {@link NamespacedKey} for this {@link BiomeMap}
      */
     @ParametersAreNonnullByDefault
     public BiomeMap(NamespacedKey namespacedKey) {

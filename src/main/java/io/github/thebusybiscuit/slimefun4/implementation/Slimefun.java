@@ -538,12 +538,11 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
 
             // Now check the actual Version of Minecraft
             int version = PaperLib.getMinecraftVersion();
-            int patchVersion = PaperLib.getMinecraftPatchVersion();
 
             if (version > 0) {
                 // Check all supported versions of Minecraft
                 for (MinecraftVersion supportedVersion : MinecraftVersion.values()) {
-                    if (supportedVersion.isMinecraftVersion(version, patchVersion)) {
+                    if (supportedVersion.isMinecraftVersion(version)) {
                         minecraftVersion = supportedVersion;
                         return false;
                     }

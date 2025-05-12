@@ -1,8 +1,8 @@
 package io.github.thebusybiscuit.slimefun4.core.services.localization;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -16,9 +16,7 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.apache.commons.lang.Validate;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -52,23 +50,16 @@ class AbstractLocaleRegexChecker {
 
     @ParametersAreNonnullByDefault
     @Nullable
-    FileConfiguration readLanguageFile(LanguagePreset lang, LanguageFile file) throws IOException, InvalidConfigurationException {
+    BufferedReader readLanguageFile(LanguagePreset lang, LanguageFile file) {
         String path = file.getFilePath(lang.getLanguageCode());
-        byte[] bytes;
-        try (InputStream inputStream = getClass().getResourceAsStream(path)) {
-            if (inputStream == null) {
-                // This file does not exist, we consider it "passed".
-                return null;
-            }
-            bytes = inputStream.readAllBytes();
-        }
-        String contents = new String(bytes, StandardCharsets.UTF_8);
-        if (contents.trim().equals("---")) {
+        InputStream inputStream = getClass().getResourceAsStream(path);
+
+        if (inputStream == null) {
+            // This file does not exist, we consider it "passed".
             return null;
         }
-        YamlConfiguration configuration = new YamlConfiguration();
-        configuration.loadFromString(contents);
-        return configuration;
+
+        return new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
     }
 
     @ParametersAreNonnullByDefault

@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -25,7 +26,6 @@ import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.test.TestUtilities;
 import io.github.thebusybiscuit.slimefun4.test.presets.SlimefunItemTest;
-import io.github.thebusybiscuit.slimefun4.utils.compatibility.VersionedEnchantment;
 import io.github.thebusybiscuit.slimefun4.utils.tags.SlimefunTag;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
@@ -164,7 +164,7 @@ class TestClimbingPick implements SlimefunItemTest<ClimbingPick> {
 
     private ItemStack getPickWithEfficiency(@Nonnull ClimbingPick pick, int level) {
         ItemStack item = pick.getItem().clone();
-        item.addUnsafeEnchantment(VersionedEnchantment.EFFICIENCY, level);
+        item.addUnsafeEnchantment(Enchantment.DIG_SPEED, level);
         return item;
     }
 }

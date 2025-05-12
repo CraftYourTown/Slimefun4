@@ -40,17 +40,17 @@ public abstract class NuclearReactor extends Reactor {
 
     @Override
     public ItemStack getProgressBar() {
-        return SlimefunItems.LAVA_CRYSTAL.item();
+        return SlimefunItems.LAVA_CRYSTAL;
     }
 
     @Override
     public ItemStack getCoolant() {
-        return SlimefunItems.REACTOR_COOLANT_CELL.item();
+        return SlimefunItems.REACTOR_COOLANT_CELL;
     }
 
     @Override
     public ItemStack getFuelIcon() {
-        return SlimefunItems.URANIUM.item();
+        return SlimefunItems.URANIUM;
     }
 
     @Override

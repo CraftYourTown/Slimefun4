@@ -39,8 +39,10 @@ import org.bukkit.persistence.PersistentDataType;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -68,7 +70,6 @@ public final class SlimefunUtils {
      * a Slimefun device.
      *
      * @param item The {@link Item} to query
-     *
      * @return Whether the {@link Item} is excluded from being picked up
      */
     public static boolean hasNoPickupFlag(@Nonnull Item item) {
@@ -96,7 +97,6 @@ public final class SlimefunUtils {
      * This method checks whether the given {@link ItemStack} is considered {@link Soulbound}.
      *
      * @param item The {@link ItemStack} to check for
-     *
      * @return Whether the given item is soulbound
      */
     public static boolean isSoulbound(@Nullable ItemStack item) {
@@ -113,7 +113,6 @@ public final class SlimefunUtils {
      * @param item  The {@link ItemStack} to check for
      * @param world The {@link World} to check if the {@link SlimefunItem} is enabled in if applicable.
      *              If {@code null} then this will not do a world check.
-     *
      * @return Whether the given item is soulbound
      */
     public static boolean isSoulbound(@Nullable ItemStack item, @Nullable World world) {
@@ -161,7 +160,6 @@ public final class SlimefunUtils {
      *
      * @param item          The {@link ItemStack} you want to add/remove Soulbound from.
      * @param makeSoulbound If the item should be soulbound.
-     *
      * @see #isSoulbound(ItemStack)
      */
     public static void setSoulbound(@Nullable ItemStack item, boolean makeSoulbound) {
@@ -201,7 +199,6 @@ public final class SlimefunUtils {
      * This method checks whether the given {@link ItemStack} is radioactive.
      *
      * @param item The {@link ItemStack} to check
-     *
      * @return Whether this {@link ItemStack} is radioactive or not
      */
     public static boolean isRadioactive(@Nullable ItemStack item) {
@@ -213,7 +210,6 @@ public final class SlimefunUtils {
      * The result will be a Player Head with this texture.
      *
      * @param texture The texture for this head (base64 or hash)
-     *
      * @return An {@link ItemStack} with this Head texture
      */
     public static @Nonnull ItemStack getCustomHead(@Nonnull String texture) {
@@ -271,9 +267,7 @@ public final class SlimefunUtils {
      * @param item      The {@link ItemStack} being tested.
      * @param sfitem    The {@link ItemStack} that {@param item} is being compared against.
      * @param checkLore Whether to include the current lore of either item in the comparison
-     *
      * @return True if the given {@link ItemStack}s are similar under the given constraints
-     *
      * @see DistinctiveItem
      */
     public static boolean isItemSimilar(@Nullable ItemStack item, @Nullable ItemStack sfitem, boolean checkLore) {
@@ -290,9 +284,7 @@ public final class SlimefunUtils {
      * @param sfitem      The {@link ItemStack} that {@param item} is being compared against.
      * @param checkLore   Whether to include the current lore of either item in the comparison
      * @param checkAmount Whether to include the item's amount(s) in the comparison
-     *
      * @return True if the given {@link ItemStack}s are similar under the given constraints
-     *
      * @see DistinctiveItem
      */
     public static boolean isItemSimilar(@Nullable ItemStack item, @Nullable ItemStack sfitem, boolean checkLore, boolean checkAmount) {
@@ -309,9 +301,7 @@ public final class SlimefunUtils {
      * @param checkLore        Whether to include the current lore of either item in the comparison
      * @param checkAmount      Whether to include the item's amount(s) in the comparison
      * @param checkDistinction Whether to check for special distinctive properties of the items.
-     *
      * @return True if the given {@link ItemStack}s are similar under the given constraints
-     *
      * @see DistinctiveItem
      */
     public static boolean isItemSimilar(@Nullable ItemStack item, @Nullable ItemStack sfitem, boolean checkLore, boolean checkAmount, boolean checkDistinction) {
@@ -323,23 +313,36 @@ public final class SlimefunUtils {
             return false;
         } else if (checkAmount && item.getAmount() < sfitem.getAmount()) {
             return false;
-        } else if (sfitem instanceof SlimefunItemStack stackOne && item instanceof SlimefunItemStack stackTwo) {
-            if (stackOne.getItemId().equals(stackTwo.getItemId())) {
-                /*
-                 * PR #3417
-                 *
-                 * Some items can't rely on just IDs matching and will implement Distinctive Item
-                 * in which case we want to use the method provided to compare
-                 *
-                 * Some items can 't rely on just IDs matching and will implement {@link DistinctiveItem}
-                 * in which case we want to use the method provided to compare
-                 */
-                if (checkDistinction && stackOne instanceof DistinctiveItem distinctive && stackTwo instanceof DistinctiveItem) {
-                    return distinctive.canStack(stackOne.getItemMeta(), stackTwo.getItemMeta());
-                }
-                return true;
+        }
+
+        // Deploy the most fuckass ugly checks in the world
+        boolean doesPdcMatch = true;
+        if (Slimefun.getCfg().getBoolean("options.unoptimal-itemfilter") && item.hasItemMeta() && sfitem.hasItemMeta()) {
+            try {
+                byte[] itemContainerSerialized = item.getItemMeta().getPersistentDataContainer().serializeToBytes();
+                byte[] sfContainerSerialized = sfitem.getItemMeta().getPersistentDataContainer().serializeToBytes();
+                doesPdcMatch = Arrays.equals(itemContainerSerialized, sfContainerSerialized);
+            } catch (IOException ex) {
             }
-            return false;
+        }
+
+        SlimefunItem sf_sfitem = SlimefunItem.getByItem(sfitem);
+        SlimefunItem sf_item = SlimefunItem.getByItem(item);
+
+        if (sf_sfitem != null && sf_item != null) {
+            if (!sf_sfitem.getId().equals(sf_item.getId())) {
+                return false;
+            }
+            /*
+             * PR #3417
+             *
+             * Some items can't rely on just IDs matching and will implement {@link DistinctiveItem}
+             * in which case we want to use the method provided to compare
+             */
+            if (checkDistinction && sf_sfitem instanceof DistinctiveItem distinctive && sf_item instanceof DistinctiveItem) {
+                return distinctive.canStack(sf_sfitem.getItem().getItemMeta(), sf_item.getItem().getItemMeta()) && doesPdcMatch;
+            }
+            return true;
         } else if (item.hasItemMeta()) {
             Debug.log(TestCase.CARGO_INPUT_TESTING, "SlimefunUtils#isItemSimilar - item.hasItemMeta()");
             ItemMeta itemMeta = item.getItemMeta();
@@ -358,10 +361,10 @@ public final class SlimefunUtils {
                         Optional<DistinctiveItem> optionalDistinctive = getDistinctiveItem(id);
                         if (optionalDistinctive.isPresent()) {
                             ItemMeta sfItemMeta = sfitem.getItemMeta();
-                            return optionalDistinctive.get().canStack(sfItemMeta, itemMeta);
+                            return optionalDistinctive.get().canStack(sfItemMeta, itemMeta) && doesPdcMatch;
                         }
                     }
-                    return id.equals(((SlimefunItemStack) sfitem).getItemId());
+                    return id.equals((sf_sfitem.getId())) && doesPdcMatch;
                 }
 
                 ItemMetaSnapshot meta = ((SlimefunItemStack) sfitem).getItemMetaSnapshot();
@@ -391,17 +394,17 @@ public final class SlimefunUtils {
                      */
                     Optional<DistinctiveItem> optionalDistinctive = getDistinctiveItem(id);
                     if (optionalDistinctive.isPresent()) {
-                        return optionalDistinctive.get().canStack(possibleSfItemMeta, itemMeta);
+                        return optionalDistinctive.get().canStack(possibleSfItemMeta, itemMeta) && doesPdcMatch;
                     }
                     return true;
                 } else {
                     Debug.log(TestCase.CARGO_INPUT_TESTING, "  Item IDs don't match, checking meta {} == {} (lore: {})", itemMeta, possibleSfItemMeta, checkLore);
-                    return equalsItemMeta(itemMeta, possibleSfItemMeta, checkLore);
+                    return equalsItemMeta(itemMeta, possibleSfItemMeta, checkLore) && doesPdcMatch;
                 }
             } else if (sfitem.hasItemMeta()) {
                 ItemMeta sfItemMeta = sfitem.getItemMeta();
                 Debug.log(TestCase.CARGO_INPUT_TESTING, "  Comparing meta (vanilla items?) - {} == {} (lore: {})", itemMeta, sfItemMeta, checkLore);
-                return equalsItemMeta(itemMeta, sfItemMeta, checkLore);
+                return equalsItemMeta(itemMeta, sfItemMeta, checkLore) && doesPdcMatch;
             } else {
                 return false;
             }
@@ -484,7 +487,6 @@ public final class SlimefunUtils {
      *
      * @param lore1 The first lore
      * @param lore2 The second lore
-     *
      * @return Whether the two lores are equal
      */
     public static boolean equalsLore(@Nonnull List<String> lore1, @Nonnull List<String> lore2) {
@@ -542,7 +544,6 @@ public final class SlimefunUtils {
      * @param p           The {@link Player}
      * @param item        The {@link ItemStack} to check
      * @param sendMessage Whether to send a message response to the {@link Player}
-     *
      * @return Whether the {@link Player} is able to use that item.
      */
     public static boolean canPlayerUseItem(@Nonnull Player p, @Nullable ItemStack item, boolean sendMessage) {
@@ -567,7 +568,6 @@ public final class SlimefunUtils {
      * @param reason          The {@link ItemSpawnReason} why the item is being dropped
      * @param addRandomOffset Whether a random offset should be added (see {@link World#dropItemNaturally(Location, ItemStack)})
      * @param player          The player that caused this {@link SlimefunItemSpawnEvent}
-     *
      * @return The dropped {@link Item} (or null if the {@link SlimefunItemSpawnEvent} was cancelled)
      */
     @ParametersAreNonnullByDefault
@@ -597,7 +597,6 @@ public final class SlimefunUtils {
      * @param item            The {@link ItemStack} to drop
      * @param reason          The {@link ItemSpawnReason} why the item is being dropped
      * @param addRandomOffset Whether a random offset should be added (see {@link World#dropItemNaturally(Location, ItemStack)})
-     *
      * @return The dropped {@link Item} (or null if the {@link SlimefunItemSpawnEvent} was cancelled)
      */
     @ParametersAreNonnullByDefault
@@ -613,7 +612,6 @@ public final class SlimefunUtils {
      * @param loc    The {@link Location} where to drop the item
      * @param item   The {@link ItemStack} to drop
      * @param reason The {@link ItemSpawnReason} why the item is being dropped
-     *
      * @return The dropped {@link Item} (or null if the {@link SlimefunItemSpawnEvent} was cancelled)
      */
     @ParametersAreNonnullByDefault
@@ -627,7 +625,6 @@ public final class SlimefunUtils {
      * this will call {@link Inventory#isEmpty()} (Which calls MC code resulting in a faster method).
      *
      * @param inventory The {@link Inventory} to check.
-     *
      * @return True if the inventory is empty and false otherwise
      */
     public static boolean isInventoryEmpty(@Nonnull Inventory inventory) {

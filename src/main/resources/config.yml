@@ -24,6 +24,7 @@ options:
   drop-excess-sf-give-items: false
   backup-data: true
   drop-block-creative: true
+  unoptimal-itemfilter: true
 
 guide:
   show-vanilla-recipes: true
